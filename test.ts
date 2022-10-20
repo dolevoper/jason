@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { parse, trueParser, falseParser, booleanParser, stringParser, nullParser, numberParser, arrayParser, oneOf, nullable } from ".";
+import { parse, trueParser, falseParser, booleanParser, stringParser, nullParser, numberParser, arrayParser, oneOf, nullable, mapParser } from ".";
 
 assert.equal(parse(trueParser, "true"), true);
 assert.equal(parse(trueParser, "     true  "), true);
@@ -106,6 +106,18 @@ assert.throws(() => parse(arrayParser(numberParser), "[1,2"));
 assert.throws(() => parse(arrayParser(numberParser), "[3,   "));
 assert.throws(() => parse(arrayParser(numberParser), JSON.stringify(["hello", "world"])));
 assert.throws(() => parse(arrayParser(numberParser), JSON.stringify([5, "hello"])));
+
+
+
+assert.deepEqual(parse(mapParser(numberParser), JSON.stringify({ foo: 1, bar: 2 })), new Map<string, number>([["foo", 1], ["bar", 2]]));
+assert.deepEqual(parse(mapParser(numberParser), "{}"), new Map<string, number>());
+assert.deepEqual(parse(mapParser(booleanParser), '  {   "foo"  :     true }    '), new Map<string, boolean>([["foo", true]]));
+assert.throws(() => parse(mapParser(booleanParser), ""));
+assert.throws(() => parse(mapParser(booleanParser), "{}    h"));
+assert.throws(() => parse(mapParser(booleanParser), "{"));
+assert.throws(() => parse(mapParser(booleanParser), "}"));
+assert.throws(() => parse(mapParser(booleanParser), "{,}"));
+assert.throws(() => parse(mapParser(booleanParser), "{foo: true}"));
 
 
 
