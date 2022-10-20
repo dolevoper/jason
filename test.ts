@@ -153,3 +153,11 @@ assert.deepEqual(parse(parser3, JSON.stringify([null, ["hello", "world"]])), [nu
 assert.throws(() => parse(parser3, '"hello world"'));
 assert.throws(() => parse(parser3, "null"));
 assert.throws(() => parse(parser3, JSON.stringify([1, 2, null])));
+
+const parser4 = mapParser(nullable(arrayParser(oneOf(stringParser, mapParser(booleanParser)))));
+
+assert.deepEqual(parse(parser4, JSON.stringify({})), new Map());
+assert.deepEqual(parse(parser4, JSON.stringify({ foo: null })), new Map([["foo", null]]));
+assert.deepEqual(parse(parser4, JSON.stringify({ foo: null, bar: [] })), new Map([["foo", null], ["bar", []]]));
+assert.deepEqual(parse(parser4, JSON.stringify({ foo: null, bar: ["hello"] })), new Map([["foo", null], ["bar", ["hello"]]]));
+assert.deepEqual(parse(parser4, JSON.stringify({ foo: null, bar: ["hello", { baz: true, qoux: false }] })), new Map([["foo", null], ["bar", ["hello", new Map([["baz", true], ["qoux", false]])]]]));
