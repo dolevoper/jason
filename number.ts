@@ -7,7 +7,7 @@ export const numberParser: Parser<undefined, number> = ({ str, offset }) => {
 
     if (isNegative) offset++;
 
-    if (str.startsWith("00", offset) || str.charAt(offset) === ".") throw new Error();
+    if (str.startsWith("00", offset) || !isDigit(str.charAt(offset))) throw new Error();
     
     for (; offset < str.length; offset++) {
         switch (true) {

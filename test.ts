@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { parse, trueParser, falseParser, booleanParser, stringParser, nullParser, numberParser } from ".";
+import { parse, trueParser, falseParser, booleanParser, stringParser, nullParser, numberParser, arrayParser, oneOf, nullable } from ".";
 
 assert.equal(parse(trueParser, "true"), true);
 assert.equal(parse(trueParser, "     true  "), true);
@@ -55,6 +55,8 @@ assert.throws(() => parse(nullParser, "hello"));
 assert.throws(() => parse(nullParser, "nul"));
 assert.throws(() => parse(nullParser, "null   a"));
 
+
+
 assert.equal(parse(numberParser, "0"), 0);
 assert.equal(parse(numberParser, "-0"), -0);
 assert.equal(parse(numberParser, "1"), 1);
@@ -86,3 +88,56 @@ assert.throws(() => parse(numberParser, "77    a"));
 assert.throws(() => parse(numberParser, "."));
 assert.throws(() => parse(numberParser, "    -."));
 assert.throws(() => parse(numberParser, "5.1.2"));
+
+
+assert.deepEqual(parse(arrayParser(numberParser), "[1,2,3,4,5]"), [1, 2, 3, 4, 5]);
+assert.deepEqual(parse(arrayParser(numberParser), "[]"), []);
+assert.deepEqual(parse(arrayParser(numberParser), "[   5 ]"), [5]);
+assert.deepEqual(parse(arrayParser(numberParser), "      [5] "), [5]);
+assert.deepEqual(parse(arrayParser(numberParser), "[   5, 10,   0]"), [5, 10, 0]);
+assert.throws(() => parse(arrayParser(numberParser), ""));
+assert.throws(() => parse(arrayParser(numberParser), "["));
+assert.throws(() => parse(arrayParser(numberParser), "]"));
+assert.throws(() => parse(arrayParser(numberParser), "[]    s"));
+assert.throws(() => parse(arrayParser(numberParser), "hello"));
+assert.throws(() => parse(arrayParser(numberParser), "d[]"));
+assert.throws(() => parse(arrayParser(numberParser), "[5"));
+assert.throws(() => parse(arrayParser(numberParser), "[1,2"));
+assert.throws(() => parse(arrayParser(numberParser), "[3,   "));
+assert.throws(() => parse(arrayParser(numberParser), JSON.stringify(["hello", "world"])));
+assert.throws(() => parse(arrayParser(numberParser), JSON.stringify([5, "hello"])));
+
+
+
+const parser1 = arrayParser(oneOf(numberParser, booleanParser));
+
+assert.deepEqual(parse(parser1, JSON.stringify([])), []);
+assert.deepEqual(parse(parser1, JSON.stringify([1, 2, 3])), [1, 2, 3]);
+assert.deepEqual(parse(parser1, JSON.stringify([true, true])), [true, true]);
+assert.deepEqual(parse(parser1, JSON.stringify([1, false])), [1, false]);
+assert.throws(() => parse(parser1, "5"));
+assert.throws(() => parse(parser1, "true"));
+assert.throws(() => parse(parser1, '"hello world"'));
+assert.throws(() => parse(parser1, JSON.stringify(["one", "two", false])));
+assert.throws(() => parse(parser1, JSON.stringify(["true", "1"])));
+
+const parser2 = arrayParser(oneOf(booleanParser, numberParser));
+const val1 = JSON.stringify([1, 2, true, false, 5]);
+
+assert.deepEqual(parse(parser1, val1), parse(parser2, val1));
+assert.throws(() => parse(parser2, "5"));
+assert.throws(() => parse(parser2, "true"));
+assert.throws(() => parse(parser2, '"hello world"'));
+assert.throws(() => parse(parser2, JSON.stringify(["one", "two", false])));
+assert.throws(() => parse(parser2, JSON.stringify(["true", "1"])));
+
+const parser3 = oneOf(numberParser, arrayParser(nullable(arrayParser(stringParser))));
+
+assert.equal(parse(parser3, "5"), 5);
+assert.deepEqual(parse(parser3, JSON.stringify([])), []);
+assert.deepEqual(parse(parser3, JSON.stringify([[], []])), [[], []]);
+assert.deepEqual(parse(parser3, JSON.stringify([null])), [null]);
+assert.deepEqual(parse(parser3, JSON.stringify([null, ["hello", "world"]])), [null, ["hello", "world"]]);
+assert.throws(() => parse(parser3, '"hello world"'));
+assert.throws(() => parse(parser3, "null"));
+assert.throws(() => parse(parser3, JSON.stringify([1, 2, null])));

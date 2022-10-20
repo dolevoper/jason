@@ -8,6 +8,18 @@ export function trimStart<T>({ str, result, offset }: ParsingState<T>): ParsingS
     };
 }
 
+export function dropCharacters(count = 1) {
+    return function <T>({ str, offset, result }: ParsingState<T>): ParsingState<T> {
+        const res = { str, offset: offset + count, result };
+
+        if (res.offset > str.length) throw new Error();
+
+        return res;
+    };
+}
+
+export const dropOne = dropCharacters();
+
 type ParserReturnType<T extends Parser<undefined, any>> = T extends Parser<undefined, infer U> ? U : never;
 
 export function oneOf<T extends Parser<undefined, any>[]>(...parsers: [...T]): Parser<undefined, ParserReturnType<T[number]>> {

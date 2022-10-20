@@ -10,6 +10,6 @@ export const nullParser: Parser<undefined, null> = ({ str, offset }) => {
     throw new Error();
 };
 
-export function nullaable<T>(parser: Parser<undefined, T>): Parser<undefined, T | null> {
+export function nullable<T>(parser: Parser<undefined, T>): Parser<undefined, T | null> {
     return oneOf(nullParser, parser);
 }
